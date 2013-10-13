@@ -18,30 +18,28 @@ void mstSimple(Graph *g) {
 }
 
 void mstFibonacci(Graph *g) {
-
-}
-
-void randomMode(Graph *g) {
 	if(! g->isConnected()) {
 		cout <<"The graph is not connected, so MST does not exist"<<endl;
 		return ;
 	}
+	// Calculating the mst on g
+	FibonacciHeap *f = new FibonacciHeap(g);
+	g->primMST(f);
+	delete f;
+}
+
+void randomMode(Graph *g) {
 	clock_t t;
 	//-------------------simple queue-----------
-	SimpleQueue *q = new SimpleQueue(g);
 	t = clock();
-	g->primMST(q);
+	mstSimple(g);
 	t = clock() - t;
-	delete q;
-//	g->printMST();
 	printf("It took simple array %d microseconds!\n",(int)t);
 
 	//-------------------Fibonacci heap-----------
-	FibonacciHeap *f= new FibonacciHeap(g);
 	t = clock();
-	g->primMST(f);
+	mstFibonacci(g);
 	t = clock() - t;
-	delete f;
 	printf("It took fibonacci %d microseconds!\n",(int)t);
 }
 

@@ -18,6 +18,21 @@ enum Color { White, Black };
 
 class MinQueue;
 
+struct EdgeEnd {
+	int index;
+	int weight;
+	EdgeEnd(int i, int w) : index(i), weight(w) {}
+};
+
+struct Vertex{
+	int id;
+	int key;
+	int mstParent;
+	Color color; // Marker used for traversal
+	vector<EdgeEnd> edges;
+	Vertex(int i): id(i){ key = INT_MAX; mstParent = -1; color = White;}
+};
+
 class Graph {  // represent a non directed graph
 
 	//private method
@@ -26,18 +41,6 @@ class Graph {  // represent a non directed graph
 
 	void dfsVisit(int v);
 public:
-	struct EdgeEnd {
-		int index;
-		int weight;
-		EdgeEnd(int i, int w) : index(i), weight(w) {}
-	};
-
-	struct  Vertex{
-		int key;
-		int mstParent;
-		Color color; // Marker used for traversal
-		vector<EdgeEnd> edges;
-	};
 
 	int nVertices;
 	Vertex ** vertices;

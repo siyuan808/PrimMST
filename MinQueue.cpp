@@ -36,22 +36,196 @@ void SimpleQueue::decreaseKey(int v, int value) {
 
 // --------------------------------Fibonacci Heap-------------------------------
 FibonacciHeap::FibonacciHeap(Graph *gh) {
-	g = gh;
-
+	graph = gh;
+	heap = NULL;
+	initialize(gh);
 }
 
-void FibonacciHeap::initialize(){
-
+FibonacciHeap::~FibonacciHeap() {
+	if(heap)
+		deleteAll(heap);
 }
 
 bool FibonacciHeap::isEmpty() {
-
+	return heap == NULL;
 }
 
 int FibonacciHeap::extractMin() {
-
+	fnode* old=heap;
+	heap = removeMin(heap);
+	Vertex* ret = old->data;
+	delete old;
+	return ret->id;
 }
 
+//Cascading cut
 void FibonacciHeap::decreaseKey(int v, int value) {
+	Vertex* data = graph->vertices[v];
+	fnode *n = find(heap, data);
+	if(data->key < value) return ;
+	data->key = value;
+	if(n->data->key < n->parent->data->key) {
+		heap = cut(heap,n);
+		fnode* parent = n->parent;
+		n->parent = NULL;
+		while(parent != NULL && parent->childCut) {
+			heap = cut(heap,parent);
+			n = parent;
+			parent = n->parent;
+			n->parent = NULL;
+		}
+		if(parent!=NULL && parent->parent!=NULL)
+			parent->childCut = true;
+	}
+}
 
+//--------------------Fibonacci Heap Private---------------------
+void FibonacciHeap::initialize(Graph *g){
+	for(int i = 0; i < g->nVertices; i++) {
+		insert(g->vertices[i]);
+	}
+}
+
+// create a node and insert it into the top level linked list
+fnode *FibonacciHeap::insert(Vertex* v) {
+	fnode* n = singleton(v);
+	heap = merge(heap,n);
+	return n;
+}
+
+//return a single node min tree
+fnode *FibonacciHeap::singleton(Vertex* value) {
+	fnode* n=new fnode;
+	n->data=value;
+	n->left=n->right=n;
+	n->degree=0;
+	n->childCut=false;
+	n->child=NULL;
+	n->parent=NULL;
+	return n;
+}
+
+
+// merge node b into a's linked list
+fnode *FibonacciHeap::merge(fnode *a, fnode *b){
+	if(a==NULL)return b;
+	if(b==NULL)return a;
+	if(a->data > b->data) {
+		fnode* temp=a;
+		a=b;
+		b=temp;
+	}
+	fnode* an=a->right;
+	fnode* bp=b->left;
+	a->right=b;
+	b->left=a;
+	an->left=bp;
+	bp->right=an;
+	return a;
+}
+
+void FibonacciHeap::unMarkAndunParentAll(fnode *n){
+	if(n == NULL)return;
+	fnode* c=n;
+	do {
+		c->childCut = false;
+		c->parent = NULL;
+		c=c->right;
+	}while(c!=n);
+}
+
+// remove min and do the pairwise combine
+fnode *FibonacciHeap::removeMin(fnode *n) {
+	unMarkAndunParentAll(n->child);
+	if(n->right == n) {
+		n=n->child;
+	} else {
+		n->right->left = n->left;
+		n->left->right = n->right;
+		n = merge(n->right,n->child);
+	}
+	if(n==NULL)return n;
+	fnode* trees[64]={NULL};
+
+	while(true) {
+		if(trees[n->degree]!=NULL) {
+			fnode* t=trees[n->degree];
+			if(t==n)break;
+			trees[n->degree]=NULL;
+			if(n->data->key < t->data->key) {
+				t->left->right=t->right;
+				t->right->left=t->left;
+				addChild(n,t);
+			} else {
+				t->left->right=t->right;
+				t->right->left=t->left;
+				if(n->right==n) {
+					t->right=t->left=t;
+					addChild(t,n);
+					n=t;
+				} else {
+					n->left->right=t;
+					n->right->left=t;
+					t->right=n->right;
+					t->left=n->left;
+					addChild(t,n);
+					n=t;
+				}
+			}
+			continue;
+		} else {
+			trees[n->degree]=n;
+		}
+		n=n->right;
+	}
+	fnode* min=n;
+	do {
+		if(n->data->key < min->data->key)min=n;
+		n=n->right;
+	} while(n!=n);
+	return min;
+}
+
+void FibonacciHeap::addChild(fnode *parent, fnode *child){
+	child->right = child->left = child;
+	child->parent=parent;
+	parent->degree++;
+	parent->child = merge(parent->child,child);
+}
+
+fnode *FibonacciHeap::cut(fnode *heap, fnode *n){
+	if(n->right == n) {
+		n->parent->child = NULL;
+	} else {
+		n->right->left = n->left;
+		n->left->right = n->right;
+		n->parent->child = n->right;
+	}
+	n->right = n->left = n;
+	n->childCut=false;
+	return merge(heap,n);
+}
+
+void FibonacciHeap::deleteAll(fnode *n) {
+	if(n!=NULL) {
+		fnode* c=n;
+		do {
+			fnode* d=c;
+			c=c->right;
+			deleteAll(d->child);
+			delete d;
+		} while(c!=n);
+	}
+}
+
+fnode* FibonacciHeap::find(fnode *heap, Vertex* value) {
+	fnode* n = heap;
+	if(n == NULL) return NULL;
+	do {
+		if(n->data == value) return n;
+		fnode* ret = find(n->child,value);
+		if(ret) return ret;
+		n=n->right;
+	}while(n!=heap);
+	return NULL;
 }

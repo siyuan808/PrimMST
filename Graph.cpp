@@ -97,7 +97,7 @@ void Graph::initialize(int n) {
 	this->nVertices  = n;
 	this->vertices = (Vertex * *) malloc( n * sizeof(Vertex*));
 	for(int i=0; i<n; i++)
-		vertices[i] = new Vertex();
+		vertices[i] = new Vertex(i);
 }
 
 //------------------------------------DFS and check connectivity---------------------
