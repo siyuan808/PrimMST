@@ -31,12 +31,14 @@ void mstFibonacci(Graph *g) {
 void randomMode(Graph *g) {
 	clock_t t;
 	//-------------------simple queue-----------
+	cout <<"------------------Simple Array------------------"<<endl;
 	t = clock();
 	mstSimple(g);
 	t = clock() - t;
 	printf("It took simple array %d microseconds!\n",(int)t);
 
 	//-------------------Fibonacci heap-----------
+	cout <<"------------------Fibonacci Heap----------------"<<endl;
 	t = clock();
 	mstFibonacci(g);
 	t = clock() - t;
