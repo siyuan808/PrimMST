@@ -51,6 +51,7 @@ public:
 	void build(int n, double d);
 	void buildFull(int n);
 	void build(const char *fileName);
+	void print();
 	bool isConnected();
 
 	int getWeight(int u, int v);

@@ -81,6 +81,7 @@ void Graph::build(const char *fileName) {
 }
 
 bool Graph::addEdge(int i, int j, int w ) {
+	if(i == j) return false;
 	Vertex *v = vertices[i];
 	for(int k = 0; k < v->edges.size(); k++) {
 		//Edge (i, j) already in the graph
@@ -98,6 +99,15 @@ void Graph::initialize(int n) {
 	this->vertices = (Vertex * *) malloc( n * sizeof(Vertex*));
 	for(int i=0; i<n; i++)
 		vertices[i] = new Vertex(i);
+}
+
+void Graph::print() {
+	for(int i = 0; i < nVertices; i++) {
+		cout << i <<"--->";
+		for(int j = 0; j < vertices[i]->edges.size(); j++)
+			cout <<"  " <<vertices[i]->edges[j].index <<"("<<vertices[i]->edges[j].weight <<")";
+		cout <<endl;
+	}
 }
 
 //------------------------------------DFS and check connectivity---------------------

@@ -31,6 +31,7 @@ int SimpleQueue::extractMin() {
 }
 
 void SimpleQueue::decreaseKey(int v, int value) {
+	if(g->vertices[v]->key < value) return;
 	g->vertices[v]->key = value;
 }
 
@@ -51,19 +52,31 @@ bool FibonacciHeap::isEmpty() {
 }
 
 int FibonacciHeap::extractMin() {
-	fnode* old=heap;
+	fnode* old = heap;
 	heap = removeMin(heap);
 	Vertex* ret = old->data;
 	delete old;
+//	cout <<"Extract out "<<ret->id<<endl;
 	return ret->id;
 }
 
 //Cascading cut
 void FibonacciHeap::decreaseKey(int v, int value) {
-	Vertex* data = graph->vertices[v];
-	fnode *n = find(heap, data);
-	if(data->key < value) return ;
-	data->key = value;
+//	cout <<"Decreasing " <<v <<" to value "<<value<<endl;
+	fnode *n = find(heap, graph->vertices[v]);
+
+	if(n->data->key < value)
+		return;
+
+	n->data->key = value;
+
+	//In case n has no parent
+	if(n->parent == NULL) {
+		if(n->data->key < heap->data->key)
+			heap = n;
+		return;
+	}
+
 	if(n->data->key < n->parent->data->key) {
 		heap = cut(heap,n);
 		fnode* parent = n->parent;
@@ -108,9 +121,9 @@ fnode *FibonacciHeap::singleton(Vertex* value) {
 
 // merge node b into a's linked list
 fnode *FibonacciHeap::merge(fnode *a, fnode *b){
-	if(a==NULL)return b;
-	if(b==NULL)return a;
-	if(a->data > b->data) {
+	if(a==NULL) return b;
+	if(b==NULL) return a;
+	if(a->data->key > b->data->key) {
 		fnode* temp=a;
 		a=b;
 		b=temp;
@@ -137,9 +150,9 @@ void FibonacciHeap::unMarkAndunParentAll(fnode *n){
 // remove min and do the pairwise combine
 fnode *FibonacciHeap::removeMin(fnode *n) {
 	unMarkAndunParentAll(n->child);
-	if(n->right == n) {
-		n=n->child;
-	} else {
+	if(n->right == n) {  // Only child
+		n = n->child;
+	} else { // remove this node
 		n->right->left = n->left;
 		n->left->right = n->right;
 		n = merge(n->right,n->child);
@@ -148,10 +161,11 @@ fnode *FibonacciHeap::removeMin(fnode *n) {
 	fnode* trees[64]={NULL};
 
 	while(true) {
-		if(trees[n->degree]!=NULL) {
-			fnode* t=trees[n->degree];
-			if(t==n)break;
-			trees[n->degree]=NULL;
+		if(trees[n->degree]!=NULL) {  // there are node of same degree, combine
+			fnode* t = trees[n->degree];
+			if(t == n)
+				break;
+			trees[n->degree] = NULL;
 			if(n->data->key < t->data->key) {
 				t->left->right=t->right;
 				t->right->left=t->left;
@@ -162,27 +176,30 @@ fnode *FibonacciHeap::removeMin(fnode *n) {
 				if(n->right==n) {
 					t->right=t->left=t;
 					addChild(t,n);
-					n=t;
+					n = t;
 				} else {
 					n->left->right=t;
 					n->right->left=t;
 					t->right=n->right;
 					t->left=n->left;
 					addChild(t,n);
-					n=t;
+					n = t;
 				}
 			}
+			trees[n->degree] = n; // add the new tree in track
 			continue;
 		} else {
-			trees[n->degree]=n;
+			trees[n->degree] = n;
 		}
 		n=n->right;
 	}
-	fnode* min=n;
+	fnode* min = n;
+	fnode *ptr = n;
 	do {
-		if(n->data->key < min->data->key)min=n;
-		n=n->right;
-	} while(n!=n);
+		if(ptr->data->key < min->data->key)
+			min = ptr;
+		ptr = ptr->right;
+	} while(ptr != n);
 	return min;
 }
 
@@ -224,8 +241,9 @@ fnode* FibonacciHeap::find(fnode *heap, Vertex* value) {
 	do {
 		if(n->data == value) return n;
 		fnode* ret = find(n->child,value);
-		if(ret) return ret;
-		n=n->right;
+		if(ret)
+			return ret;
+		n = n->right;
 	}while(n!=heap);
 	return NULL;
 }

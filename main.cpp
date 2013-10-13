@@ -35,6 +35,7 @@ void randomMode(Graph *g) {
 	t = clock();
 	mstSimple(g);
 	t = clock() - t;
+	cout <<"mst cost using simple array: " <<g->mstCost<<endl;
 	printf("It took simple array %d microseconds!\n",(int)t);
 
 	//-------------------Fibonacci heap-----------
@@ -42,6 +43,7 @@ void randomMode(Graph *g) {
 	t = clock();
 	mstFibonacci(g);
 	t = clock() - t;
+	cout <<"mst cost using Fibonacci heap: " <<g->mstCost<<endl;
 	printf("It took fibonacci %d microseconds!\n",(int)t);
 }
 
@@ -69,6 +71,7 @@ int main(int argc, char *args[]) {
 			return 0;
 		}
 		g->build(n, (double)m/100);
+//		g->print();
 		randomMode(g);
 	}
 	//---------------------Simple Mode--------------------
