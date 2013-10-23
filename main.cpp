@@ -1,9 +1,11 @@
 #include <iostream>
+#include <fstream>
 #include "Graph.h"
 #include "MinQueue.h"
 #include <vector>
 #include <time.h>
 
+//#define VERBOSE
 using namespace std;
 
 void mstSimple(Graph *g) {
@@ -14,6 +16,7 @@ void mstSimple(Graph *g) {
 	// Calculating the mst on g
 	SimpleQueue *q = new SimpleQueue(g);
 	g->primMST(q);
+//	g->printMST();
 	delete q;
 }
 
@@ -50,7 +53,7 @@ void randomMode(Graph *g) {
 
 int main(int argc, char *args[]) {
 	Graph *g = new Graph();
-	if(argc < 3) {
+	if(argc < 2) {
 		cout <<"Too few arguments" <<endl;
 		return 0;
 	}
@@ -67,7 +70,7 @@ int main(int argc, char *args[]) {
 			m = m * 10 + (*c - '0');
 			c++;
 		}
-		if(*c != '%' || m > 100) {
+		if(*c != '\0' || m > 100) {
 			cout <<"Not valid arguments" <<endl;
 			return 0;
 		}
@@ -89,7 +92,52 @@ int main(int argc, char *args[]) {
 		g->build(args[2]);
 		mstFibonacci(g);
 		g->printMST();
+	}
+	//---------------------Do the comparison---------------
+	else if(strcmp(args[1], "-t") == 0) {
+		int nNodes[3] = {1000, 3000, 5000};
+		double densities[10] = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+		int nTest = 5;
+		time_t start, elapse, avg;
+		ofstream out;
+		out.open("output.xls");
+		out <<"MST: Comparison of MinQueue between Array and Fibocacci Heap\n";
+		for(int n = 0; n < 3; n++) {
+			out <<nNodes[n]<<"\tArray\tfHeap\n";
+			for(int d = 0; d < 10; d++) {
+				cout <<"n: " <<nNodes[n] <<" d: " <<densities[d]<<endl;
+				out <<densities[d]<<"\t";
+				Graph *g = new Graph();
+				g->build(nNodes[n], densities[d]);
+				//Array
+				avg = 0;
+				for(int i=0; i < nTest; i++) {
+					start = clock();
+					mstSimple(g);
+					elapse = clock()-start;
+					avg += elapse;
+#ifdef VERBOSE
+					out <<elapse<<"\t";
+#endif
+				}
+				out << avg/nTest<< "\t";
+				//Fibonacci
+				avg = 0;
+				for(int i=0; i < nTest; i++) {
+					start = clock();
+					mstFibonacci(g);
+					elapse = clock()-start;
+					avg += elapse;
+#ifdef VERBOSE
+					out <<elapse<<"\t";
+#endif
+				}
+				out << avg/nTest<< "\n";
+				delete g;
+			}
+		}
+		out.close();
 	} else
-		cout <<"Invalid mode, choose between -r, -f, -s"<<endl;
+		cout <<"Invalid mode, choose between -r, -f, -s, -t"<<endl;
 	return 0;
 }

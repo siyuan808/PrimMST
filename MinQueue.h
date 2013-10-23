@@ -88,11 +88,10 @@ private:
 
 	void initialize(Graph *g);
 	fnode *insert(Type v);
-//	fnode *singleton(Type value);
 	fnode *merge(fnode *a, fnode *b);
 	fnode *removeMin(fnode *n);
 	void addChild(fnode *parent, fnode *child);
-	void unMarkAndunParentAll(fnode *n);
+	void removeAllFromParent(fnode *n);
 	fnode *cut(fnode *heap, fnode *n);
 	void deleteAll(fnode *n);
 	fnode *find(fnode *heap, int v);

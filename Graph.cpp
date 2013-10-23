@@ -14,6 +14,11 @@ Graph::Graph() {
 	// TODO Auto-generated constructor stub
 	mstCost = -1;
 }
+
+Graph::~Graph() {
+	if(vertices)
+		delete [] vertices;
+}
 //---------------------------------------Build a Graph----------------------------------
 void Graph::buildFull (int n){
 	initialize(n);
@@ -22,12 +27,12 @@ void Graph::buildFull (int n){
 
 	for(i = 0; i < nVertices; i++) {
 		for(j = i+1; j < nVertices; j++) {
-			w = rand() % 1000;
+			w = rand() % 1000 + 1;
 			vertices[i]->edges[j] = w;
 			vertices[j]->edges[i] = w;
 		}
 	}
-	cout <<"Build a full graph!"<<endl;
+//	cout <<"Build a full graph!"<<endl;
 }
 
 void Graph::build(int n, double d) {
@@ -46,18 +51,18 @@ void Graph::build(int n, double d) {
 	while(e <= m) {
 		i = rand() % n;
 		j = rand() % n;
-		w = rand() % 1000;
+		w = rand() % 1000 + 1;
 		if(addEdge(i, j, w)) // (i, j) not already in there
 			e++;
 	}
 	while(! isConnected()) {
 		i = rand() % n;
 		j = rand() % n;
-		w = rand() % 1000;
+		w = rand() % 1000 + 1;
 		if(addEdge(i, j, w))
 			e++;
 	}
-	cout <<"Actual density is : " << (double) 2 * e/(n * (n-1)) <<endl;
+//	cout <<"Actual density is : " << (double) 2 * e/(n * (n-1)) <<endl;
 }
 
 void Graph::build(const char *fileName) {
@@ -185,11 +190,7 @@ void Graph::printMST() {
 	// mst exists
 	cout <<mstCost<<endl;
 	for(int i = 1; i < nVertices; i++) {
-		cout << vertices[i]->mstParent <<"\t" << i <<endl;
+		cout << vertices[i]->mstParent <<"\t" << i <<"\t"<<getWeight(i, vertices[i]->mstParent)<<endl;
 	}
-}
-
-Graph::~Graph() {
-	// TODO Auto-generated destructor stub
 }
 

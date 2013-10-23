@@ -55,6 +55,8 @@ FibonacciHeap::~FibonacciHeap() {
 	if(heap)
 		//free the memory of all the nodes
 		deleteAll(heap);
+	if(f_map)
+		free(f_map);
 }
 
 bool FibonacciHeap::isEmpty() {
@@ -138,7 +140,7 @@ fnode *FibonacciHeap::merge(fnode *a, fnode *b){
 }
 
 // Remove all the nodes in a node's list from their parent
-void FibonacciHeap::unMarkAndunParentAll(fnode *n){
+void FibonacciHeap::removeAllFromParent(fnode *n){
 	if(n == NULL) return;
 	fnode* c = n;
 	do {
@@ -150,7 +152,7 @@ void FibonacciHeap::unMarkAndunParentAll(fnode *n){
 
 // remove min and do the pairwise combine and return new min
 fnode *FibonacciHeap::removeMin(fnode *n) {
-	unMarkAndunParentAll(n->child);
+	removeAllFromParent(n->child);
 	if(n->right == n) {  // Only child
 		n = n->child;
 	} else {
@@ -243,16 +245,6 @@ void FibonacciHeap::deleteAll(fnode *n) {
 }
 
 fnode* FibonacciHeap::find(fnode *heap, int id) {
-//	fnode* n = heap;
-//	if(n == NULL) return NULL;
-//	do {
-//		if(n->data == value) return n;
-//		fnode* ret = find(n->child,value);
-//		if(ret)
-//			return ret;
-//		n = n->right;
-//	}while(n!=heap);
-//	return NULL;
 //	unordered_map<int, fnode*>::iterator it = f_map->find(id);
 //	if(it != f_map->end())
 //		return it->second;
