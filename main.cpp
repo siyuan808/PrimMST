@@ -29,7 +29,8 @@ void mstFibonacci(Graph *g) {
 }
 
 void randomMode(Graph *g) {
-	clock_t t;
+	//Performance comparison
+	clock_t t, s;
 	//-------------------simple queue-----------
 	cout <<"------------------Simple Array------------------"<<endl;
 	t = clock();
@@ -40,11 +41,11 @@ void randomMode(Graph *g) {
 
 	//-------------------Fibonacci heap-----------
 	cout <<"------------------Fibonacci Heap----------------"<<endl;
-	t = clock();
+	s = clock();
 	mstFibonacci(g);
-	t = clock() - t;
+	s = clock() - s;
 	cout <<"mst cost using Fibonacci heap: " <<g->mstCost<<endl;
-	printf("It took fibonacci %d microseconds!\n",(int)t);
+	printf("It took fibonacci %d microseconds!\n",(int)s);
 }
 
 int main(int argc, char *args[]) {
@@ -70,9 +71,12 @@ int main(int argc, char *args[]) {
 			cout <<"Not valid arguments" <<endl;
 			return 0;
 		}
+		clock_t start = clock();
 		g->build(n, (double)m/100);
 //		g->print();
+//		return 0;
 		randomMode(g);
+		cout <<"Total cost is : "<<clock() - start<<endl;
 	}
 	//---------------------Simple Mode--------------------
 	else if(strcmp(args[1], "-s") == 0) {

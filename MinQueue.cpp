@@ -9,41 +9,51 @@
 
 // --------------------------------SimpleQueue------------------------------------
 SimpleQueue::SimpleQueue(Graph *gh){
-	g = gh;
-	elements = g->nVertices;
+//	g = gh;
+//	elements = g->nVertices;
+	n = gh->nVertices;
+	data = (Type *) malloc(sizeof(Type) * n);
+	for(int i = 0; i < n; i++) {
+		data[i] = gh->vertices[i];
+	}
 }
 
 bool SimpleQueue::isEmpty() {
-	return elements <= 0;
+	for(int i = 0; i < n; i++ ) {
+		if(data[i]->color == White)
+			return false;
+	}
+	return true;
 }
 
 int SimpleQueue::extractMin() {
 	int res = -1;
 	int minKey = INT_MAX;
-	for(int i = 0; i < g->nVertices; i++ ) {
-		if(g->vertices[i]->color == White && g->vertices[i]->key < minKey) {
+	for(int i = 0; i < n; i++ ) {
+		if(data[i]->color == White && data[i]->key < minKey) {
 			res = i;
-			minKey = g->vertices[i]->key;
+			minKey = data[i]->key;
 		}
 	}
-	elements--;
 	return res;
 }
 
 void SimpleQueue::decreaseKey(int v, int value) {
-	if(g->vertices[v]->key < value) return;
-	g->vertices[v]->key = value;
+	if(data[v]->key <= value) return;
+	data[v]->key = value;
 }
 
 // --------------------------------Fibonacci Heap-------------------------------
 FibonacciHeap::FibonacciHeap(Graph *gh) {
 	graph = gh;
 	heap = NULL;
+	f_map = (fnode**) malloc(sizeof(fnode *) * gh->nVertices);
 	initialize(gh);
 }
 
 FibonacciHeap::~FibonacciHeap() {
 	if(heap)
+		//free the memory of all the nodes
 		deleteAll(heap);
 }
 
@@ -54,7 +64,7 @@ bool FibonacciHeap::isEmpty() {
 int FibonacciHeap::extractMin() {
 	fnode* old = heap;
 	heap = removeMin(heap);
-	Vertex* ret = old->data;
+	Type ret = old->data;
 	delete old;
 //	cout <<"Extract out "<<ret->id<<endl;
 	return ret->id;
@@ -63,20 +73,22 @@ int FibonacciHeap::extractMin() {
 //Cascading cut
 void FibonacciHeap::decreaseKey(int v, int value) {
 //	cout <<"Decreasing " <<v <<" to value "<<value<<endl;
-	fnode *n = find(heap, graph->vertices[v]);
-
-	if(n->data->key < value)
+	if(graph->vertices[v]->key <= value)
 		return;
+
+	//Find the node in the f heap
+	fnode *n = find(heap, v);
 
 	n->data->key = value;
 
-	//In case n has no parent
+	//In case n has no parent and change the heap min pointer if necessary
 	if(n->parent == NULL) {
 		if(n->data->key < heap->data->key)
 			heap = n;
 		return;
 	}
 
+	// need to do the cascading cut
 	if(n->data->key < n->parent->data->key) {
 		heap = cut(heap,n);
 		fnode* parent = n->parent;
@@ -95,29 +107,17 @@ void FibonacciHeap::decreaseKey(int v, int value) {
 //--------------------Fibonacci Heap Private---------------------
 void FibonacciHeap::initialize(Graph *g){
 	for(int i = 0; i < g->nVertices; i++) {
-		insert(g->vertices[i]);
+		fnode *n = insert(g->vertices[i]);
+		f_map[i] = n;
 	}
 }
 
 // create a node and insert it into the top level linked list
-fnode *FibonacciHeap::insert(Vertex* v) {
-	fnode* n = singleton(v);
+fnode *FibonacciHeap::insert(Type v) {
+	fnode* n = new fnode(v);
 	heap = merge(heap,n);
 	return n;
 }
-
-//return a single node min tree
-fnode *FibonacciHeap::singleton(Vertex* value) {
-	fnode* n=new fnode;
-	n->data=value;
-	n->left=n->right=n;
-	n->degree=0;
-	n->childCut=false;
-	n->child=NULL;
-	n->parent=NULL;
-	return n;
-}
-
 
 // merge node b into a's linked list
 fnode *FibonacciHeap::merge(fnode *a, fnode *b){
@@ -137,47 +137,54 @@ fnode *FibonacciHeap::merge(fnode *a, fnode *b){
 	return a;
 }
 
+// Remove all the nodes in a node's list from their parent
 void FibonacciHeap::unMarkAndunParentAll(fnode *n){
-	if(n == NULL)return;
-	fnode* c=n;
+	if(n == NULL) return;
+	fnode* c = n;
 	do {
 		c->childCut = false;
 		c->parent = NULL;
 		c=c->right;
-	}while(c!=n);
+	}while(c != n);
 }
 
-// remove min and do the pairwise combine
+// remove min and do the pairwise combine and return new min
 fnode *FibonacciHeap::removeMin(fnode *n) {
 	unMarkAndunParentAll(n->child);
 	if(n->right == n) {  // Only child
 		n = n->child;
-	} else { // remove this node
+	} else {
+		// remove this node from its linked list and reinsert its children back in the list
 		n->right->left = n->left;
 		n->left->right = n->right;
 		n = merge(n->right,n->child);
 	}
-	if(n==NULL)return n;
+
+	if(n == NULL)
+		return n;
+
+	// pairwise combine
 	fnode* trees[64]={NULL};
 
 	while(true) {
 		if(trees[n->degree]!=NULL) {  // there are node of same degree, combine
 			fnode* t = trees[n->degree];
-			if(t == n)
+			if(t == n) // break the loop,
 				break;
 			trees[n->degree] = NULL;
 			if(n->data->key < t->data->key) {
-				t->left->right=t->right;
+				t->left->right=t->right; // extract t from the lists
 				t->right->left=t->left;
 				addChild(n,t);
 			} else {
 				t->left->right=t->right;
 				t->right->left=t->left;
-				if(n->right==n) {
-					t->right=t->left=t;
+				if(n->right == n) { // only child
+					t->right = t->left=t;
 					addChild(t,n);
 					n = t;
 				} else {
+					// replace n with t in the list and add the n as the child of t
 					n->left->right=t;
 					n->right->left=t;
 					t->right=n->right;
@@ -205,9 +212,9 @@ fnode *FibonacciHeap::removeMin(fnode *n) {
 
 void FibonacciHeap::addChild(fnode *parent, fnode *child){
 	child->right = child->left = child;
-	child->parent=parent;
+	child->parent = parent;
 	parent->degree++;
-	parent->child = merge(parent->child,child);
+	parent->child = merge(parent->child, child);
 }
 
 fnode *FibonacciHeap::cut(fnode *heap, fnode *n){
@@ -219,7 +226,7 @@ fnode *FibonacciHeap::cut(fnode *heap, fnode *n){
 		n->parent->child = n->right;
 	}
 	n->right = n->left = n;
-	n->childCut=false;
+	n->childCut = false;
 	return merge(heap,n);
 }
 
@@ -235,15 +242,21 @@ void FibonacciHeap::deleteAll(fnode *n) {
 	}
 }
 
-fnode* FibonacciHeap::find(fnode *heap, Vertex* value) {
-	fnode* n = heap;
-	if(n == NULL) return NULL;
-	do {
-		if(n->data == value) return n;
-		fnode* ret = find(n->child,value);
-		if(ret)
-			return ret;
-		n = n->right;
-	}while(n!=heap);
+fnode* FibonacciHeap::find(fnode *heap, int id) {
+//	fnode* n = heap;
+//	if(n == NULL) return NULL;
+//	do {
+//		if(n->data == value) return n;
+//		fnode* ret = find(n->child,value);
+//		if(ret)
+//			return ret;
+//		n = n->right;
+//	}while(n!=heap);
+//	return NULL;
+//	unordered_map<int, fnode*>::iterator it = f_map->find(id);
+//	if(it != f_map->end())
+//		return it->second;
+	if(id >= 0 && id < graph->nVertices)
+		return f_map[id];
 	return NULL;
 }

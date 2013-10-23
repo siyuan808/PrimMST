@@ -23,9 +23,11 @@ void Graph::buildFull (int n){
 	for(i = 0; i < nVertices; i++) {
 		for(j = i+1; j < nVertices; j++) {
 			w = rand() % 1000;
-			addEdge(i, j, w);
+			vertices[i]->edges[j] = w;
+			vertices[j]->edges[i] = w;
 		}
 	}
+	cout <<"Build a full graph!"<<endl;
 }
 
 void Graph::build(int n, double d) {
@@ -83,14 +85,14 @@ void Graph::build(const char *fileName) {
 bool Graph::addEdge(int i, int j, int w ) {
 	if(i == j) return false;
 	Vertex *v = vertices[i];
-	for(int k = 0; k < v->edges.size(); k++) {
-		//Edge (i, j) already in the graph
-		if(v->edges[k].index == j)
-			return false;
-	}
+	// check edge (i, j) is in the graph or not
+	unordered_map<int, int>::iterator eit = v->edges.find(j);
+	if(eit != v->edges.end())
+		return false;
+
 	// e(i, j) not in the graph, then add
-	v->edges.push_back(EdgeEnd(j, w));
-	vertices[j]->edges.push_back(EdgeEnd(i, w));
+	v->edges[j] = w;
+	vertices[j]->edges[i] = w;
 	return true;
 }
 
@@ -102,10 +104,12 @@ void Graph::initialize(int n) {
 }
 
 void Graph::print() {
+	unordered_map<int, int>::iterator eit;
 	for(int i = 0; i < nVertices; i++) {
 		cout << i <<"--->";
-		for(int j = 0; j < vertices[i]->edges.size(); j++)
-			cout <<"  " <<vertices[i]->edges[j].index <<"("<<vertices[i]->edges[j].weight <<")";
+		Vertex *v = vertices[i];
+		for(eit = v->edges.begin(); eit != v->edges.end(); eit++)
+			cout <<"  " <<eit->first <<"("<<eit->second <<")";
 		cout <<endl;
 	}
 }
@@ -122,9 +126,10 @@ void Graph::traversalInitialize() {
 
 void Graph::dfsVisit(int u) {
 	vertices[u]->color = Black;
-	vector<EdgeEnd> edgeEnds = vertices[u]->edges;
-	for(int i = 0; i < edgeEnds.size(); i++) {
-		int edgeEnd  = edgeEnds[i].index;
+	unordered_map<int, int>::iterator eit;
+	Vertex *v = vertices[u];
+	for(eit = v->edges.begin(); eit != v->edges.end(); eit++) {
+		int edgeEnd  = eit->first;
 		if(vertices[edgeEnd]->color != Black)
 			dfsVisit(edgeEnd);
 	}
@@ -143,12 +148,11 @@ bool Graph::isConnected() {
 
 //-------------------------------------------Calculate MST--------------------------
 int Graph::getWeight(int u, int v) {
-	Vertex *U = vertices[u];
-	for(int i = 0; i < U->edges.size(); i++) {
-		if(U->edges[i].index == v)
-			return U->edges[i].weight;
-	}
-	return INT_MAX;
+	Vertex *uV = vertices[u];
+	unordered_map<int, int>::iterator eit = uV->edges.find(v);
+	if(eit == uV->edges.end())
+		return INT_MAX;
+	return eit->second;
 }
 
 void Graph::primMST(MinQueue *q) {
@@ -156,8 +160,10 @@ void Graph::primMST(MinQueue *q) {
 	vertices[0]->key = 0;
 	while(!q->isEmpty()) {
 		int u = q->extractMin();
-		for(int i = 0; i < vertices[u]->edges.size(); i++) {
-			int v = vertices[u]->edges[i].index;
+		unordered_map<int, int>::iterator eit;
+		Vertex *uV = vertices[u];
+		for(eit = uV->edges.begin(); eit != uV->edges.end(); eit++) {
+			int v = eit->first;
 			int w = getWeight(u, v);
 			if(vertices[v]->color == White && w < vertices[v]->key){
 				q->decreaseKey(v, w);

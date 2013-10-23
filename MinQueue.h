@@ -9,6 +9,7 @@
 #define MINQUEUE_H_
 
 #include "Graph.h"
+#include <stdlib.h>
 
 class Graph;
 struct Vertex;
@@ -21,13 +22,22 @@ public:
 	virtual ~MinQueue() {}
 };
 
+typedef Vertex* Type;
+
 class SimpleQueue : public MinQueue {
 private:
-	int elements;
-	Graph *g;
+//	Graph *g;
+	int n;
+	Type *data;
+
 public:
 	SimpleQueue(Graph *gh);
-	virtual ~SimpleQueue() {}
+	virtual ~SimpleQueue() {
+		if(data != NULL) {
+			for(int i=0; i<n; i++)
+				data[i] = NULL;
+		}
+	}
 
 	bool isEmpty();
 	int extractMin();
@@ -35,7 +45,7 @@ public:
 };
 
 struct fnode {
-	Vertex* data;
+	Type data;
 
 	//Used for circular doubly linked list of siblings
 	fnode* left;
@@ -50,12 +60,19 @@ struct fnode {
 	 * Undefined for a root node.
 	 */
 	bool childCut;
+
+	fnode(Type d) { // a single fibonacci node/heap
+		data = d;
+		left = right = this;
+		degree=0;
+		childCut=false;
+		child=NULL;
+		parent=NULL;
+	}
 };
 
 class FibonacciHeap : public MinQueue {
 public:
-
-
 	FibonacciHeap(Graph *gh);
 	virtual ~FibonacciHeap();
 
@@ -67,16 +84,18 @@ private:
 	Graph *graph;
 	fnode *heap;
 
+	fnode* *f_map;
+
 	void initialize(Graph *g);
-	fnode *insert(Vertex* v);
-	fnode *singleton(Vertex* value);
+	fnode *insert(Type v);
+//	fnode *singleton(Type value);
 	fnode *merge(fnode *a, fnode *b);
 	fnode *removeMin(fnode *n);
 	void addChild(fnode *parent, fnode *child);
 	void unMarkAndunParentAll(fnode *n);
 	fnode *cut(fnode *heap, fnode *n);
 	void deleteAll(fnode *n);
-	fnode *find(fnode *heap, Vertex* v);
+	fnode *find(fnode *heap, int v);
 };
 
 #endif /* MINQUEUE_H_ */

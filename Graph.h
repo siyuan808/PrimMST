@@ -11,25 +11,21 @@
 #include <vector>
 #include <iostream>
 #include "MinQueue.h"
+#include <tr1/unordered_map>
 
 using namespace std;
+using namespace tr1;
 
 enum Color { White, Black };
 
 class MinQueue;
-
-struct EdgeEnd {
-	int index;
-	int weight;
-	EdgeEnd(int i, int w) : index(i), weight(w) {}
-};
 
 struct Vertex{
 	int id;
 	int key;
 	int mstParent;
 	Color color; // Marker used for traversal
-	vector<EdgeEnd> edges;
+	unordered_map<int, int> edges;
 	Vertex(int i): id(i){ key = INT_MAX; mstParent = -1; color = White;}
 };
 
