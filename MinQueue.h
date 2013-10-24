@@ -16,9 +16,9 @@ struct Vertex;
 
 class MinQueue {
 public:
-	virtual int extractMin() = 0;
-	virtual void decreaseKey(int v, int value) = 0;
-	virtual bool isEmpty() = 0;
+	virtual int extractMin() = 0; // Get the min and remove it from the queue
+	virtual void decreaseKey(int v, int value) = 0; // Decrease the key in node v
+	virtual bool isEmpty() = 0; // Check is the queue empty
 	virtual ~MinQueue() {}
 };
 
@@ -45,7 +45,7 @@ public:
 };
 
 struct fnode {
-	Type data;
+	Type data; // An pointer to a vertex in a graph
 
 	//Used for circular doubly linked list of siblings
 	fnode* left;
@@ -82,19 +82,28 @@ public:
 
 private:
 	Graph *graph;
-	fnode *heap;
 
+	fnode *heap; // fibonacci heap's min pointer
+	// an array help to look up the fnode according to the id of a vertex
 	fnode* *f_map;
-
+	// initialize the fib heap with the vertices in graph g
 	void initialize(Graph *g);
+	// insert a vertex into current fib heap
 	fnode *insert(Type v);
+	// merge two doubly linked list into one
 	fnode *merge(fnode *a, fnode *b);
+	// remove min and do the pairwise combine
 	fnode *removeMin(fnode *n);
+	// add a child fnode into a fnode
 	void addChild(fnode *parent, fnode *child);
+	// excise all the node in the list from their parent
 	void removeAllFromParent(fnode *n);
+	// excise fnode n from its parent and re-insert it into the top list
 	fnode *cut(fnode *heap, fnode *n);
-	void deleteAll(fnode *n);
+	// find the fnode according to the id of a vertex
 	fnode *find(fnode *heap, int v);
+	// delete every fnode and free the memory
+	void deleteAll(fnode *n);
 };
 
 #endif /* MINQUEUE_H_ */

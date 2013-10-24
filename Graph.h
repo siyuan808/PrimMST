@@ -22,9 +22,9 @@ enum Color { White, Black };
 class MinQueue;
 
 struct Vertex{
-	int id;
-	int key;
-	int mstParent;
+	int id; // the index in the vertex array of the graph
+	int key; // current key when calculate the mst
+	int mstParent; // parent id in the mst
 	Color color; // Marker used for traversal
 	unordered_map<int, int> edges;
 	Vertex(int i): id(i){ key = INT_MAX; mstParent = -1; color = White;}
@@ -32,27 +32,28 @@ struct Vertex{
 
 class Graph {  // represent a non directed graph
 
-	//private method
+private:
 	bool addEdge(int i, int j, int w);
 	void initialize(int n);
-
 	void dfsVisit(int v);
 public:
 
-	int nVertices;
-	Vertex ** vertices;
-
-	int mstCost;
+	int nVertices; // number of vertices
+	Vertex ** vertices; // an array of vertices
+	int mstCost; // mst cost after calculated
 
 	Graph();
 	void build(int n, double d);
 	void buildFull(int n);
 	void build(const char *fileName);
 	void print();
+	// To check whether corrent graph is connected or not
 	bool isConnected();
-
+	// Get the weight on edge (u, v)
 	int getWeight(int u, int v);
+	// reset all the vertices before dfs and prim
 	void traversalInitialize();
+	// prim's algo to calculate the mst
 	void primMST(MinQueue *q);
 	void printMST();
 
