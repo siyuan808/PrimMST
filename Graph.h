@@ -12,6 +12,7 @@
 #include <iostream>
 #include "MinQueue.h"
 #include <tr1/unordered_map>
+#include <limits.h>
 
 using namespace std;
 using namespace tr1;

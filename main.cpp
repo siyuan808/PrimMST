@@ -4,6 +4,7 @@
 #include "MinQueue.h"
 #include <vector>
 #include <time.h>
+#include <string.h>
 
 //#define VERBOSE
 using namespace std;
